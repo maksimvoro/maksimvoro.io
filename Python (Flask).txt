@@ -1,0 +1,43 @@
+from flask import Flask, render_template, request, redirect, url_for, session
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+
+# Example products
+products = [
+    {'id': 1, 'name': 'Paracord Bracelet', 'price': 10, 'image': 'bracelet.jpg'},
+    {'id': 2, 'name': 'Paracord Keychain', 'price': 5, 'image': 'keychain.jpg'},
+]
+
+@app.route('/')
+def home():
+    return render_template('index.html', products=products)
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if request.method == 'POST':
+        password = request.form['password']
+        if password == 'your_password':
+            session['admin'] = True
+            return redirect(url_for('add_product'))
+    return render_template('admin.html')
+
+@app.route('/add_product', methods=['GET', 'POST'])
+def add_product():
+    if not session.get('admin'):
+        return redirect(url_for('admin'))
+
+    if request.method == 'POST':
+        new_product = {
+            'id': len(products) + 1,
+            'name': request.form['name'],
+            'price': request.form['price'],
+            'image': request.form['image']
+        }
+        products.append(new_product)
+        return redirect(url_for('home'))
+
+    return render_template('add_product.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
